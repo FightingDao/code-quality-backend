@@ -30,6 +30,13 @@ export class TeamsController {
     return this.teamsService.getUserNames();
   }
 
+  @Get('all-users')
+  @ApiOperation({ summary: '获取所有活跃用户（脚本用，含 id/username/email，不依赖 teamId）' })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  async getAllActiveUsers() {
+    return this.teamsService.getAllActiveUsers();
+  }
+
   @Post()
   @ApiOperation({ summary: '创建小组' })
   @ApiResponse({ status: 201, description: '创建成功' })

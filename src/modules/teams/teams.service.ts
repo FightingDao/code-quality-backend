@@ -75,6 +75,18 @@ export class TeamsService {
   }
 
   /**
+   * 获取所有活跃用户（供脚本做 Git 提交匹配，不依赖 teamId）
+   */
+  async getAllActiveUsers(): Promise<{ success: boolean; data: { id: string; username: string; email: string; gitUsername: string | null; gitEmail: string | null }[] }> {
+    const users = await this.prisma.user.findMany({
+      where: { isActive: true },
+      select: { id: true, username: true, email: true, gitUsername: true, gitEmail: true },
+      orderBy: { username: 'asc' },
+    });
+    return { success: true, data: users };
+  }
+
+  /**
    * 获取小组详情
    */
   async getTeamDetail(id: string): Promise<{ success: boolean; data: TeamDetailDto }> {

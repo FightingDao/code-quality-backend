@@ -64,6 +64,14 @@ let TeamsService = class TeamsService {
             data: users.map(u => u.username),
         };
     }
+    async getAllActiveUsers() {
+        const users = await this.prisma.user.findMany({
+            where: { isActive: true },
+            select: { id: true, username: true, email: true, gitUsername: true, gitEmail: true },
+            orderBy: { username: 'asc' },
+        });
+        return { success: true, data: users };
+    }
     async getTeamDetail(id) {
         return this.getTeamDetailWithTx(id, this.prisma);
     }

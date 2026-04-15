@@ -12,6 +12,16 @@ export declare class TeamsService {
         success: boolean;
         data: string[];
     }>;
+    getAllActiveUsers(): Promise<{
+        success: boolean;
+        data: {
+            id: string;
+            username: string;
+            email: string;
+            gitUsername: string | null;
+            gitEmail: string | null;
+        }[];
+    }>;
     getTeamDetail(id: string): Promise<{
         success: boolean;
         data: TeamDetailDto;

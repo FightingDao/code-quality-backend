@@ -59,11 +59,11 @@ export class CodeReviewService {
       await this.prisma.$executeRaw`
         INSERT INTO code_issues (
           id, analysis_id, file_path, line_start, line_end, 
-          issue_type, severity, description, suggestion, code_snippet, created_at, updated_at
+          issue_type, severity, description, suggestion, code_snippet, created_at, updated_at, committer_name
         ) VALUES (
           gen_random_uuid(), ${analysisId}, ${issue.filePath}, ${issue.lineStart || null}, ${issue.lineEnd || null},
           ${issue.type}, ${issue.severity}, ${issue.description}, ${issue.suggestion || null}, ${issue.codeSnippet || null},
-          NOW(), NOW()
+          NOW(), NOW(), ${issue.committerName || null}
         )
       `;
     }

@@ -16,6 +16,16 @@ export declare class TeamsController {
         success: boolean;
         data: string[];
     }>;
+    getAllActiveUsers(): Promise<{
+        success: boolean;
+        data: {
+            id: string;
+            username: string;
+            email: string;
+            gitUsername: string | null;
+            gitEmail: string | null;
+        }[];
+    }>;
     createTeam(dto: CreateTeamDto): Promise<{
         success: boolean;
         data: import("./dto/teams.dto").TeamDetailDto;

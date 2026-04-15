@@ -32,6 +32,9 @@ let TeamsController = class TeamsController {
     async getUserNames() {
         return this.teamsService.getUserNames();
     }
+    async getAllActiveUsers() {
+        return this.teamsService.getAllActiveUsers();
+    }
     async createTeam(dto) {
         try {
             return await this.teamsService.createTeam(dto);
@@ -135,6 +138,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], TeamsController.prototype, "getUserNames", null);
+__decorate([
+    (0, common_1.Get)('all-users'),
+    (0, swagger_1.ApiOperation)({ summary: '获取所有活跃用户（脚本用，含 id/username/email，不依赖 teamId）' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: '获取成功' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], TeamsController.prototype, "getAllActiveUsers", null);
 __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: '创建小组' }),
