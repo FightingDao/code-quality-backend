@@ -16,6 +16,8 @@ const projects_module_1 = require("./modules/projects/projects.module");
 const teams_module_1 = require("./modules/teams/teams.module");
 const users_module_1 = require("./modules/users/users.module");
 const code_review_module_1 = require("./modules/code-review/code-review.module");
+const bug_analysis_module_1 = require("./modules/bug-analysis/bug-analysis.module");
+const tasks_module_1 = require("./modules/tasks/tasks.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -32,6 +34,8 @@ exports.AppModule = AppModule = __decorate([
             teams_module_1.TeamsModule,
             users_module_1.UsersModule,
             code_review_module_1.CodeReviewModule,
+            bug_analysis_module_1.BugAnalysisModule,
+            tasks_module_1.TasksModule,
         ],
     })
 ], AppModule);

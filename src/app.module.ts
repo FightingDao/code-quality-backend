@@ -7,6 +7,8 @@ import { ProjectsModule } from './modules/projects/projects.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { UsersModule } from './modules/users/users.module';
 import { CodeReviewModule } from './modules/code-review/code-review.module';
+import { BugAnalysisModule } from './modules/bug-analysis/bug-analysis.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { CodeReviewModule } from './modules/code-review/code-review.module';
     TeamsModule,
     UsersModule,
     CodeReviewModule,
+    BugAnalysisModule,
+    TasksModule,
   ],
 })
 export class AppModule {}

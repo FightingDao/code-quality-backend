@@ -33,9 +33,9 @@ model User {
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
   codeAnalyses     CodeAnalysis[]
-  committedReviews CodeReview[]   @relation("CommittedReviews")
-  reviewedBy       CodeReview[]   @relation("ReviewedBy")
-  team             Team?          @relation(fields: [teamId], references: [id])
+  committedReviews CodeReview[] @relation("CommittedReviews")
+  reviewedBy       CodeReview[] @relation("ReviewedBy")
+  team             Team?        @relation(fields: [teamId], references: [id])
 
   @@map("users")
 }
@@ -52,9 +52,9 @@ model Project {
   lastCommitAt  DateTime?          @map("last_commit_at")
   createdAt     DateTime           @default(now()) @map("created_at")
   updatedAt     DateTime           @updatedAt @map("updated_at")
-  analyses      CodeAnalysis[]
-  statistics    ProjectStatistic[]
-  team          Team?              @relation(fields: [teamId], references: [id])
+  analyses   CodeAnalysis[]
+  statistics ProjectStatistic[]
+  team       Team?              @relation(fields: [teamId], references: [id])
 
   @@map("projects")
 }
@@ -186,4 +186,110 @@ model ProjectStatistic {
 
   @@unique([projectId, periodType, periodValue])
   @@map("project_statistics")
+}
+
+model BugItem {
+  id                   String    @id @default(uuid())
+  bugNo                String    @unique @map("bug_no") @db.VarChar(50)
+  bugName              String    @map("bug_name")
+  severity             String    @db.VarChar(20)
+  bugStatus            String    @map("bug_status") @db.VarChar(50)
+  bugFoundPhase        String?   @map("bug_found_phase") @db.VarChar(50)
+  bugTypeNew           Json?     @map("bug_type_new")
+  subsystem            Json?
+  sprintId             Int?      @map("sprint_id")
+  sprintName           String?   @map("sprint_name") @db.VarChar(100)
+  fixPerson            String?   @map("fix_person") @db.VarChar(100)
+  reporter             String?   @db.VarChar(100)
+  createdBy            String?   @map("created_by") @db.VarChar(100)
+  dateCreated          DateTime? @map("date_created")
+  dateUpdated          DateTime? @map("date_updated")
+  fixTimes             Int       @default(0) @map("fix_times")
+  handOffsTimes        Int       @default(0) @map("hand_offs_times")
+  linkedGroupNoDisplay String?   @map("linked_group_no_display") @db.VarChar(200)
+  commitHash           String?   @map("commit_hash") @db.VarChar(40)
+  committerName        String?   @map("committer_name") @db.VarChar(100)
+  projectName          String?   @map("project_name") @db.VarChar(200)
+  periodType           String    @map("period_type") @db.VarChar(20)
+  periodValue          String    @map("period_value") @db.VarChar(10)
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  @@index([periodType, periodValue])
+  @@index([fixPerson])
+  @@index([severity])
+  @@map("bug_items")
+}
+
+model BugStatistic {
+  id                   String   @id @default(uuid())
+  periodType           String   @map("period_type") @db.VarChar(20)
+  periodValue          String   @map("period_value") @db.VarChar(10)
+  username             String   @db.VarChar(100)
+  totalBugs            Int      @map("total_bugs")
+  criticalBugs         Int      @default(0) @map("critical_bugs")
+  severeBugs           Int      @default(0) @map("severe_bugs")
+  normalBugs           Int      @default(0) @map("normal_bugs")
+  minorBugs            Int      @default(0) @map("minor_bugs")
+  avgFixTimes          Decimal? @map("avg_fix_times") @db.Decimal(5, 2)
+  avgHandOffsTimes     Decimal? @map("avg_hand_offs_times") @db.Decimal(5, 2)
+  bugTypeDistribution  Json?    @map("bug_type_distribution")
+  phaseDistribution    Json?    @map("phase_distribution")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@unique([periodType, periodValue, username])
+  @@map("bug_statistics")
+}
+
+model BugAnalysisReport {
+  id                   String   @id @default(uuid())
+  periodType           String   @map("period_type") @db.VarChar(20)
+  periodValue          String   @map("period_value") @db.VarChar(10)
+  trendSummary         String?  @map("trend_summary")
+  topIssueTypes        Json?    @map("top_issue_types")
+  highRiskPersons      Json?    @map("high_risk_persons")
+  phaseAnalysis        Json?    @map("phase_analysis")
+  aiInsights           String?  @map("ai_insights")
+  aiSuggestions        Json?    @map("ai_suggestions")
+  totalBugs            Int      @default(0) @map("total_bugs")
+  severityDistribution Json?    @map("severity_distribution")
+  typeDistribution     Json?    @map("type_distribution")
+  phaseDistribution    Json?    @map("phase_distribution")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@unique([periodType, periodValue])
+  @@map("bug_analysis_reports")
+}
+
+model TaskDifficultyScore {
+  id          String @id @default(uuid())
+  periodType  String @map("period_type") @db.VarChar(20)
+  periodValue String @map("period_value") @db.VarChar(10)
+  taskNo      String @map("task_no") @db.VarChar(50)
+  projectNames Json  @map("project_names")
+  committers   Json
+
+  scoreScale        Decimal @map("score_scale") @db.Decimal(5, 2)
+  scoreComplexity   Decimal @map("score_complexity") @db.Decimal(5, 2)
+  scoreIssueDensity Decimal @map("score_issue_density") @db.Decimal(5, 2)
+  scoreAi           Decimal @map("score_ai") @db.Decimal(5, 2)
+  scoreCrossModule  Decimal @map("score_cross_module") @db.Decimal(5, 2)
+  totalScore        Decimal @map("total_score") @db.Decimal(5, 2)
+  difficultyLevel   String  @map("difficulty_level") @db.VarChar(10)
+
+  rawLoc         Int      @map("raw_loc")
+  rawCommitCount Int      @map("raw_commit_count")
+  rawIssueCount  Int      @map("raw_issue_count")
+  rawAvgAiScore  Decimal? @map("raw_avg_ai_score") @db.Decimal(5, 2)
+  rawModuleCount Int      @map("raw_module_count")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([taskNo, periodType, periodValue])
+  @@index([periodType, periodValue])
+  @@index([difficultyLevel])
+  @@map("task_difficulty_scores")
 }
