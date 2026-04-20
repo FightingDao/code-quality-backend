@@ -61,4 +61,11 @@ export class DashboardController {
   async getFilterOptions(@Query() dto: PeriodQueryDto) {
     return this.dashboardService.getFilterOptions(dto);
   }
+
+  @Get('periods')
+  @ApiOperation({ summary: '已有数据的周期列表' })
+  @ApiResponse({ status: 200 })
+  async getPeriods(@Query('periodType') periodType?: string) {
+    return this.dashboardService.getPeriods(periodType);
+  }
 }

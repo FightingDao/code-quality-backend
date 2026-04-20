@@ -456,6 +456,17 @@ export class DashboardService {
     };
   }
 
+  async getPeriods(periodType?: string) {
+    const type = periodType || 'week';
+    const rows = await this.prisma.codeAnalysis.findMany({
+      where: { periodType: type },
+      select: { periodValue: true },
+      distinct: ['periodValue'],
+      orderBy: { periodValue: 'desc' },
+    });
+    return { success: true, data: rows.map((r) => r.periodValue) };
+  }
+
   /**
    * 计算平均分
    */
