@@ -102,4 +102,8 @@ export declare class DashboardController {
             }[];
         };
     }>;
+    getPeriods(periodType?: string): Promise<{
+        success: boolean;
+        data: string[];
+    }>;
 }

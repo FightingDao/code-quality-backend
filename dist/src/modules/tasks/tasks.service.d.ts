@@ -49,10 +49,10 @@ export declare class TasksService {
                 scoreCrossModule: number;
                 rawAvgAiScore: number | null;
                 id: string;
-                difficultyLevel: string;
                 taskNo: string;
                 projectNames: import(".prisma/client").Prisma.JsonValue;
                 committers: import(".prisma/client").Prisma.JsonValue;
+                difficultyLevel: string;
                 rawLoc: number;
                 rawCommitCount: number;
                 rawIssueCount: number;

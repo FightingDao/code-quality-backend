@@ -37,6 +37,9 @@ let DashboardController = class DashboardController {
     async getFilterOptions(dto) {
         return this.dashboardService.getFilterOptions(dto);
     }
+    async getPeriods(periodType) {
+        return this.dashboardService.getPeriods(periodType);
+    }
 };
 exports.DashboardController = DashboardController;
 __decorate([
@@ -84,6 +87,15 @@ __decorate([
     __metadata("design:paramtypes", [common_dto_1.PeriodQueryDto]),
     __metadata("design:returntype", Promise)
 ], DashboardController.prototype, "getFilterOptions", null);
+__decorate([
+    (0, common_1.Get)('periods'),
+    (0, swagger_1.ApiOperation)({ summary: '已有数据的周期列表' }),
+    (0, swagger_1.ApiResponse)({ status: 200 }),
+    __param(0, (0, common_1.Query)('periodType')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], DashboardController.prototype, "getPeriods", null);
 exports.DashboardController = DashboardController = __decorate([
     (0, swagger_1.ApiTags)('大盘视图'),
     (0, common_1.Controller)('api/v1/dashboard'),

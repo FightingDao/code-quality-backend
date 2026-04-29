@@ -103,5 +103,9 @@ export declare class DashboardService {
             }[];
         };
     }>;
+    getPeriods(periodType?: string): Promise<{
+        success: boolean;
+        data: string[];
+    }>;
     private calculateAverageScore;
 }

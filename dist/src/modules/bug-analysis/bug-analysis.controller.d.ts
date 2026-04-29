@@ -95,6 +95,8 @@ export declare class BugAnalysisController {
         success: boolean;
         data: {
             id: string;
+            projectName: string | null;
+            committerName: string | null;
             bugNo: string;
             bugName: string;
             severity: string;
@@ -108,8 +110,6 @@ export declare class BugAnalysisController {
             dateCreated: Date | null;
             fixTimes: number;
             handOffsTimes: number;
-            committerName: string | null;
-            projectName: string | null;
         }[];
         meta: {
             total: number;

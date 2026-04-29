@@ -10,17 +10,28 @@ export class DashboardService {
    * 获取大盘统计数据
    */
   async getOverview(dto: PeriodQueryDto) {
-    const teamStats = await this.prisma.teamStatistic.findMany({
-      where: {
-        periodType: dto.periodType,
-        periodValue: dto.periodValue,
-      },
-    });
+    const [teamStats, totalTasks] = await Promise.all([
+      this.prisma.teamStatistic.findMany({
+        where: {
+          periodType: dto.periodType,
+          periodValue: dto.periodValue,
+        },
+      }),
+      // 任务总数与任务大盘对齐：按 taskNo 全局去重计数
+      // 不再用 Σ teamStatistic.totalTasks，因为 codeAnalysis 是 (user, project) 切分，
+      // 同一任务跨项目会被双重累计
+      this.prisma.taskDifficultyScore.count({
+        where: {
+          periodType: dto.periodType,
+          periodValue: dto.periodValue,
+        },
+      }),
+    ]);
 
     const overview = {
       totalMembers: teamStats.reduce((sum, s) => sum + s.totalMembers, 0),
       totalCommits: teamStats.reduce((sum, s) => sum + s.totalCommits, 0),
-      totalTasks: teamStats.reduce((sum, s) => sum + s.totalTasks, 0),
+      totalTasks,
       avgQualityScore: this.calculateAverageScore(
         // 只计算有提交的团队的分数
         teamStats
@@ -39,16 +50,46 @@ export class DashboardService {
    * 获取各小组整体分析报告
    */
   async getTeamDashboards(dto: PeriodQueryDto) {
-    const teams = await this.prisma.team.findMany({
-      include: {
-        statistics: {
-          where: {
-            periodType: dto.periodType,
-            periodValue: dto.periodValue,
-          },
+    const periodFilter = {
+      periodType: dto.periodType,
+      periodValue: dto.periodValue,
+    };
+
+    const [teams, taskScores, users] = await Promise.all([
+      this.prisma.team.findMany({
+        include: {
+          statistics: { where: periodFilter },
         },
-      },
-    });
+      }),
+      // 用 taskDifficultyScore 计算各组唯一任务数（与 getOverview / 任务大盘对齐）
+      this.prisma.taskDifficultyScore.findMany({
+        where: periodFilter,
+        select: { taskNo: true, committers: true },
+      }),
+      this.prisma.user.findMany({
+        select: { username: true, teamId: true },
+      }),
+    ]);
+
+    const userToTeam = new Map<string, string>();
+    for (const u of users) {
+      if (u.teamId) userToTeam.set(u.username, u.teamId);
+    }
+
+    // teamId -> Set<taskNo>（跨提交者去重；任务跨组时两组都会计入，符合"该组参与了多少任务"语义）
+    const teamTaskNos = new Map<string, Set<string>>();
+    for (const t of taskScores) {
+      const committers = (t.committers as string[]) || [];
+      const teamIds = new Set<string>();
+      for (const c of committers) {
+        const tid = userToTeam.get(c);
+        if (tid) teamIds.add(tid);
+      }
+      for (const tid of teamIds) {
+        if (!teamTaskNos.has(tid)) teamTaskNos.set(tid, new Set());
+        teamTaskNos.get(tid)!.add(t.taskNo);
+      }
+    }
 
     const dashboards = teams.map((team) => {
       const stat = team.statistics[0];
@@ -59,7 +100,7 @@ export class DashboardService {
         totalMembers: stat?.totalMembers || 0,
         activeMembers: stat?.activeMembers || 0,
         totalCommits: stat?.totalCommits || 0,
-        totalTasks: stat?.totalTasks || 0,
+        totalTasks: teamTaskNos.get(team.id)?.size ?? 0,
         insertions: stat?.totalInsertions || 0,
         deletions: stat?.totalDeletions || 0,
         avgQualityScore: stat?.avgQualityScore || null,

@@ -18,16 +18,24 @@ let DashboardService = class DashboardService {
         this.prisma = prisma;
     }
     async getOverview(dto) {
-        const teamStats = await this.prisma.teamStatistic.findMany({
-            where: {
-                periodType: dto.periodType,
-                periodValue: dto.periodValue,
-            },
-        });
+        const [teamStats, totalTasks] = await Promise.all([
+            this.prisma.teamStatistic.findMany({
+                where: {
+                    periodType: dto.periodType,
+                    periodValue: dto.periodValue,
+                },
+            }),
+            this.prisma.taskDifficultyScore.count({
+                where: {
+                    periodType: dto.periodType,
+                    periodValue: dto.periodValue,
+                },
+            }),
+        ]);
         const overview = {
             totalMembers: teamStats.reduce((sum, s) => sum + s.totalMembers, 0),
             totalCommits: teamStats.reduce((sum, s) => sum + s.totalCommits, 0),
-            totalTasks: teamStats.reduce((sum, s) => sum + s.totalTasks, 0),
+            totalTasks,
             avgQualityScore: this.calculateAverageScore(teamStats
                 .filter((s) => s.totalCommits > 0 && s.avgQualityScore !== null && Number(s.avgQualityScore) > 0)
                 .map((s) => Number(s.avgQualityScore))),
@@ -38,16 +46,44 @@ let DashboardService = class DashboardService {
         };
     }
     async getTeamDashboards(dto) {
-        const teams = await this.prisma.team.findMany({
-            include: {
-                statistics: {
-                    where: {
-                        periodType: dto.periodType,
-                        periodValue: dto.periodValue,
-                    },
+        const periodFilter = {
+            periodType: dto.periodType,
+            periodValue: dto.periodValue,
+        };
+        const [teams, taskScores, users] = await Promise.all([
+            this.prisma.team.findMany({
+                include: {
+                    statistics: { where: periodFilter },
                 },
-            },
-        });
+            }),
+            this.prisma.taskDifficultyScore.findMany({
+                where: periodFilter,
+                select: { taskNo: true, committers: true },
+            }),
+            this.prisma.user.findMany({
+                select: { username: true, teamId: true },
+            }),
+        ]);
+        const userToTeam = new Map();
+        for (const u of users) {
+            if (u.teamId)
+                userToTeam.set(u.username, u.teamId);
+        }
+        const teamTaskNos = new Map();
+        for (const t of taskScores) {
+            const committers = t.committers || [];
+            const teamIds = new Set();
+            for (const c of committers) {
+                const tid = userToTeam.get(c);
+                if (tid)
+                    teamIds.add(tid);
+            }
+            for (const tid of teamIds) {
+                if (!teamTaskNos.has(tid))
+                    teamTaskNos.set(tid, new Set());
+                teamTaskNos.get(tid).add(t.taskNo);
+            }
+        }
         const dashboards = teams.map((team) => {
             const stat = team.statistics[0];
             return {
@@ -57,7 +93,7 @@ let DashboardService = class DashboardService {
                 totalMembers: stat?.totalMembers || 0,
                 activeMembers: stat?.activeMembers || 0,
                 totalCommits: stat?.totalCommits || 0,
-                totalTasks: stat?.totalTasks || 0,
+                totalTasks: teamTaskNos.get(team.id)?.size ?? 0,
                 insertions: stat?.totalInsertions || 0,
                 deletions: stat?.totalDeletions || 0,
                 avgQualityScore: stat?.avgQualityScore || null,
@@ -333,6 +369,16 @@ let DashboardService = class DashboardService {
                 versions: Array.from(versionsSet).map(v => ({ value: v, label: v })),
             },
         };
+    }
+    async getPeriods(periodType) {
+        const type = periodType || 'week';
+        const rows = await this.prisma.codeAnalysis.findMany({
+            where: { periodType: type },
+            select: { periodValue: true },
+            distinct: ['periodValue'],
+            orderBy: { periodValue: 'desc' },
+        });
+        return { success: true, data: rows.map((r) => r.periodValue) };
     }
     calculateAverageScore(scores) {
         if (scores.length === 0) {
